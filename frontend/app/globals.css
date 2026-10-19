@@ -1,0 +1,431 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 0 84.2% 60.2%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 0 84.2% 60.2%;
+
+    --radius: 0.75rem;
+
+    /* Racing Red & Clean Contrast Tokens */
+    --racing-red: #dc2626;
+    --racing-red-hover: #b91c1c;
+    --racing-red-light: #fef2f2;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 4.5%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 4.5%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 0 84.2% 60.2%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 0 84.2% 60.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+  }
+  body {
+    @apply bg-[#F8F9FA] text-zinc-900 dark:bg-[#09090b] dark:text-zinc-100 antialiased selection:bg-red-500/20 selection:text-red-900;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom scrollbar suppression utilities for mobile scrollers */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Instant Theme Switch Transition Suppression */
+.disable-transitions,
+.disable-transitions * {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -m-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+}
+
+/* Clean Porcelain & Glassmorphism primitives */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(228, 228, 231, 0.85);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.glass-panel-elevated {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(228, 228, 231, 1);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-interactive {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;
+  border: 1px solid rgba(228, 228, 231, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card-interactive:hover {
+  background: #ffffff;
+  border-color: rgba(212, 212, 216, 1);
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* Micro-interaction utility classes */
+.interactive-input {
+  transition: all 200ms ease-out;
+}
+.interactive-input:hover {
+  border-color: #a1a1aa;
+}
+.interactive-input:focus,
+.interactive-input:focus-within {
+  transform: translateY(-1px);
+  border-color: #18181b;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.1);
+}
+
+.interactive-button {
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.interactive-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.15);
+}
+.interactive-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.interactive-card {
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: #d4d4d8;
+  box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Cinematic Dusk Hero & Separator */
+.cinematic-dusk-hero {
+  background: linear-gradient(180deg, rgba(9, 9, 11, 0.6) 0%, rgba(9, 9, 11, 0.95) 100%);
+}
+
+.stadium-divider {
+  border-top: 1px solid #e4e4e7;
+  position: relative;
+}
+
+/* ===================================================================
+   DYNAMIC MOVING AMBIENT AURORA & SILK GLOW MESH (LIGHT & DARK)
+   =================================================================== */
+@keyframes auroraFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fluidMesh {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(20px, -15px);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+.animate-aurora,
+.organic-smoke-container,
+.animate-fluid-mesh {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.animate-aurora {
+  background-size: 200% 200%;
+  animation: auroraFlow 14s ease infinite;
+}
+
+.animate-fluid-mesh {
+  animation: fluidMesh 18s ease-in-out infinite alternate;
+}
+
+.silk-orb-base {
+  filter: blur(80px);
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.dark .silk-orb-base {
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+/* K-Pop: Soft Rose Quartz (#fbcfe8), Lavender Bloom (#e9d5ff), Electric Cyan (#cffafe) */
+.aurora-kpop {
+  background-image: radial-gradient(at 15% 25%, rgba(251, 207, 232, 0.45) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(233, 213, 255, 0.42) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(207, 250, 254, 0.38) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(251, 207, 232, 0.35), rgba(233, 213, 255, 0.30), rgba(207, 250, 254, 0.32));
+}
+.dark .aurora-kpop {
+  background-image: radial-gradient(at 15% 25%, rgba(244, 114, 182, 0.22) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(192, 132, 252, 0.20) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(34, 211, 238, 0.18) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(192, 132, 252, 0.12), rgba(34, 211, 238, 0.15));
+}
+
+/* Motorsport: Warm Crimson (#fee2e2), Amber Honey (#fef3c7), Slate Silver (#cbd5e1) */
+.aurora-motorsport {
+  background-image: radial-gradient(at 15% 25%, rgba(254, 226, 226, 0.50) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(254, 243, 199, 0.45) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(203, 213, 225, 0.35) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(254, 226, 226, 0.40), rgba(203, 213, 225, 0.25), rgba(254, 243, 199, 0.35));
+}
+.dark .aurora-motorsport {
+  background-image: radial-gradient(at 15% 25%, rgba(239, 68, 68, 0.25) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(245, 158, 11, 0.22) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(9, 9, 11, 0.6) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(9, 9, 11, 0.35), rgba(245, 158, 11, 0.15));
+}
+
+/* Concerts: Electric Iris (#e0e7ff) and Twilight Violet (#f3e8ff) */
+.aurora-concerts {
+  background-image: radial-gradient(at 15% 25%, rgba(224, 231, 255, 0.50) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(243, 232, 255, 0.48) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(216, 180, 254, 0.38) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(224, 231, 255, 0.42), rgba(243, 232, 255, 0.36), rgba(216, 180, 254, 0.32));
+}
+.dark .aurora-concerts {
+  background-image: radial-gradient(at 15% 25%, rgba(99, 102, 241, 0.22) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(168, 85, 247, 0.20) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(139, 92, 246, 0.18) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.12), rgba(139, 92, 246, 0.15));
+}
+
+/* Sports: Fresh Grass Jade (#d1fae5) and Sky Mist (#e0f2fe) */
+.aurora-sports {
+  background-image: radial-gradient(at 15% 25%, rgba(209, 250, 229, 0.50) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(224, 242, 254, 0.48) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(186, 230, 253, 0.38) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(209, 250, 229, 0.42), rgba(224, 242, 254, 0.35), rgba(186, 230, 253, 0.32));
+}
+.dark .aurora-sports {
+  background-image: radial-gradient(at 15% 25%, rgba(16, 185, 129, 0.22) 0px, transparent 55%),
+                    radial-gradient(at 85% 30%, rgba(14, 165, 233, 0.20) 0px, transparent 55%),
+                    radial-gradient(at 50% 80%, rgba(6, 182, 212, 0.18) 0px, transparent 55%),
+                    linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(14, 165, 233, 0.12), rgba(6, 182, 212, 0.15));
+}
+
+/* ===================================================================
+   ORGANIC SMOKE / FLUID CLOUD AMBIANCE FOR LIGHT & DARK HEADERS
+   =================================================================== */
+@keyframes organicSmokeFlow {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(35px, -20px) scale(1.12) rotate(3deg);
+  }
+  66% {
+    transform: translate(-30px, 15px) scale(0.96) rotate(-2.5deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+}
+
+.organic-smoke-flow {
+  animation: organicSmokeFlow 22s ease-in-out infinite alternate;
+}
+
+.organic-smoke-container {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.smoke-cloud-base {
+  filter: blur(50px);
+  will-change: transform;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+/* Category Smoke Clouds for Light & Dark Modes */
+/* K-Pop: Drifting soft sakura mist (rgba(244, 114, 182, 0.45)) and iridescent lavender clouds (rgba(192, 132, 252, 0.35)) */
+.smoke-kpop-1 {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.45) 0%, rgba(244, 114, 182, 0) 70%);
+}
+.smoke-kpop-2 {
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.38) 0%, rgba(192, 132, 252, 0) 70%);
+}
+.smoke-kpop-3 {
+  background: radial-gradient(circle, rgba(207, 250, 254, 0.40) 0%, rgba(207, 250, 254, 0) 70%);
+}
+.dark .smoke-kpop-1 {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.25) 0%, rgba(244, 114, 182, 0) 70%);
+}
+.dark .smoke-kpop-2 {
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.22) 0%, rgba(192, 132, 252, 0) 70%);
+}
+.dark .smoke-kpop-3 {
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.20) 0%, rgba(34, 211, 238, 0) 70%);
+}
+
+/* Motorsport: Burning amber & soft racing red trail (rgba(239, 68, 68, 0.35) blending with #f59e0b) */
+.smoke-motorsport-1 {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.35) 0%, rgba(239, 68, 68, 0) 70%);
+}
+.smoke-motorsport-2 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0) 70%);
+}
+.smoke-motorsport-3 {
+  background: radial-gradient(circle, rgba(254, 226, 226, 0.40) 0%, rgba(254, 226, 226, 0) 70%);
+}
+.dark .smoke-motorsport-1 {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0) 70%);
+}
+.dark .smoke-motorsport-2 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.20) 0%, rgba(245, 158, 11, 0) 70%);
+}
+.dark .smoke-motorsport-3 {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(220, 38, 38, 0) 70%);
+}
+
+/* Concerts: Electric twilight mist (rgba(99, 102, 241, 0.38) and #a855f7) */
+.smoke-concerts-1 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.38) 0%, rgba(99, 102, 241, 0) 70%);
+}
+.smoke-concerts-2 {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0) 70%);
+}
+.smoke-concerts-3 {
+  background: radial-gradient(circle, rgba(224, 231, 255, 0.40) 0%, rgba(224, 231, 255, 0) 70%);
+}
+.dark .smoke-concerts-1 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+}
+.dark .smoke-concerts-2 {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.20) 0%, rgba(168, 85, 247, 0) 70%);
+}
+.dark .smoke-concerts-3 {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0) 70%);
+}
+
+/* Sports: Fresh stadium turf mist (rgba(16, 185, 129, 0.38) and #0ea5e9) */
+.smoke-sports-1 {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.38) 0%, rgba(16, 185, 129, 0) 70%);
+}
+.smoke-sports-2 {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(14, 165, 233, 0) 70%);
+}
+.smoke-sports-3 {
+  background: radial-gradient(circle, rgba(209, 250, 229, 0.40) 0%, rgba(209, 250, 229, 0) 70%);
+}
+.dark .smoke-sports-1 {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%);
+}
+.dark .smoke-sports-2 {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.20) 0%, rgba(14, 165, 233, 0) 70%);
+}
+.dark .smoke-sports-3 {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0) 70%);
+}
+
+
