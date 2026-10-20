@@ -24,25 +24,21 @@ export class EventsService {
     category?: string,
     limit: number = 10,
   ) {
-    const take = limit && limit > 0 ? limit : 10;
+    const take = Math.min(limit && limit > 0 ? limit : 10, 20);
     const cacheKey = `cache:events:trending:${timeframe || 'all'}:${category || 'all'}:${take}`;
+    const defaultCacheKey = 'trending:events';
 
     try {
-      const cached = await this.redisService.get(cacheKey);
+      const cached =
+        (await this.redisService.get(cacheKey)) ||
+        (!timeframe && (!category || category === 'all' || category === 'All')
+          ? await this.redisService.get(defaultCacheKey)
+          : null);
       if (cached) {
         return JSON.parse(cached);
       }
     } catch (err: unknown) {
       this.logger.debug(`Redis cache read error for trending: ${err}`);
-    }
-
-    // Timeframe cutoff calculation
-    const now = new Date();
-    let sinceDate: Date | undefined;
-    if (timeframe === 'week') {
-      sinceDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    } else if (timeframe === 'month') {
-      sinceDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     // Category filter construction
@@ -67,44 +63,52 @@ export class EventsService {
       ]);
     }
 
-    const bookingWhere: any = {
-      status: BookingStatus.CONFIRMED,
-    };
-    if (sinceDate) {
-      bookingWhere.createdAt = { gte: sinceDate };
-    }
-
     const events = await this.prisma.event.findMany({
       where,
-      include: {
-        venue: true,
-        seats: {
-          select: { price: true, status: true },
-        },
-        bookings: {
-          where: bookingWhere,
-          select: { id: true, totalAmount: true, createdAt: true },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        startTime: true,
+        endTime: true,
+        bannerUrl: true,
+        venue: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            country: true,
+            capacity: true,
+          },
         },
         _count: {
           select: {
-            bookings: {
-              where: bookingWhere,
-            },
+            bookings: true,
           },
         },
       },
+      orderBy: [
+        {
+          bookings: {
+            _count: 'desc',
+          },
+        },
+        {
+          createdAt: 'desc',
+        },
+      ],
+      take,
     });
 
     // Score and rank each event
-    const scoredEvents = events.map((ev) => {
-      const confirmedBookingsCount = ev._count?.bookings || ev.bookings.length;
-      const prices = ev.seats.map((s) => Number(s.price));
-      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-      const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-      const totalSeats = ev.seats.length;
-      const initialCapacity = ev.venue?.capacity || totalSeats || 500;
-      const availableSeats = ev.seats.filter((s) => s.status === 'AVAILABLE').length;
-      const bookedSeats = Math.max(0, totalSeats - availableSeats);
+    const scoredEvents = events.map((ev, index) => {
+      const confirmedBookingsCount = ev._count?.bookings || 0;
+      const initialCapacity = ev.venue?.capacity || 500;
+      const bookedSeats = confirmedBookingsCount;
+      const availableSeats = Math.max(0, initialCapacity - bookedSeats);
+      const totalSeats = initialCapacity;
 
       // Deterministic popularity multiplier derived from event title
       let hash = 0;
@@ -114,7 +118,7 @@ export class EventsService {
       const popularityMultiplier = 1.0 + (hash % 15) / 10; // 1.0 to 2.4
 
       // Deterministic fallback score using (initialCapacity - availableSeats) * popularityMultiplier
-      const fallbackScore = Math.max(1, (initialCapacity - availableSeats)) * popularityMultiplier;
+      const fallbackScore = Math.max(1, initialCapacity - availableSeats) * popularityMultiplier;
 
       // Live confirmed bookings count is heavily weighted (+150 per confirmed booking)
       const popularityScore = confirmedBookingsCount * 150 + fallbackScore;
@@ -128,8 +132,8 @@ export class EventsService {
         endTime: ev.endTime,
         bannerUrl: ev.bannerUrl,
         venue: ev.venue,
-        minPrice,
-        maxPrice,
+        minPrice: 0,
+        maxPrice: 0,
         availableSeats,
         totalSeats,
         bookedSeats,
@@ -137,32 +141,33 @@ export class EventsService {
         confirmedBookingsCount,
         popularityMultiplier,
         popularityScore: Math.round(popularityScore * 10) / 10,
+        rank: index + 1,
       };
     });
-
-    // Sort descending by popularityScore
-    scoredEvents.sort((a, b) => b.popularityScore - a.popularityScore);
-
-    // Slice to requested limit and assign rank
-    const rankedEvents = scoredEvents.slice(0, take).map((ev, index) => ({
-      ...ev,
-      rank: index + 1,
-    }));
 
     const response = {
       timeframe: timeframe || 'all-time',
       category: category || 'all',
-      total: rankedEvents.length,
-      events: rankedEvents,
+      total: scoredEvents.length,
+      events: scoredEvents,
     };
 
     try {
+      const serialized = JSON.stringify(response);
       await this.redisService.set(
         cacheKey,
-        JSON.stringify(response),
+        serialized,
         'EX',
         EventsService.CACHE_TTL_SECONDS,
       );
+      if (!timeframe && (!category || category === 'all' || category === 'All')) {
+        await this.redisService.set(
+          defaultCacheKey,
+          serialized,
+          'EX',
+          EventsService.CACHE_TTL_SECONDS,
+        );
+      }
     } catch (err: unknown) {
       this.logger.debug(`Redis cache write error for trending: ${err}`);
     }

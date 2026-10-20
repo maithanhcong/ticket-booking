@@ -124,10 +124,11 @@ export class BookingService {
         });
 
         // Update seats to LOCKED with version increment (Optimistic Concurrency Control)
-        await tx.seat.updateMany({
+        const updated = await tx.seat.updateMany({
           where: {
             id: { in: seatIds },
             eventId: eventId,
+            status: SeatStatus.AVAILABLE,
           },
           data: {
             status: SeatStatus.LOCKED,
@@ -137,12 +138,16 @@ export class BookingService {
           },
         });
 
+        if (updated.count !== seatIds.length) {
+          throw new ConflictException('Một hoặc nhiều ghế đã bị thay đổi trạng thái hoặc không còn khả dụng');
+        }
+
         // Transactional Outbox entry
         await tx.outboxEvent.create({
           data: {
             aggregateType: 'Booking',
             aggregateId: newBooking.id,
-            eventType: 'booking.created',
+            eventType: 'BOOKING_HOLD_INITIALIZED',
             payload: {
               bookingId: newBooking.id,
               bookingReference: newBooking.bookingReference,
@@ -158,14 +163,18 @@ export class BookingService {
       });
 
       // --- STEP 3: PUBLISH TO RABBITMQ HOLD QUEUE WITH 10-MINUTE TTL (DLX) ---
-      await this.rabbitmqService.publishBookingHold({
-        bookingId: booking.id,
-        bookingReference: booking.bookingReference,
-        eventId,
-        userId,
-        seatIds,
-        expiresAt: expiresAt.toISOString(),
-      });
+      try {
+        await this.rabbitmqService.publishBookingHold({
+          bookingId: booking.id,
+          bookingReference: booking.bookingReference,
+          eventId,
+          userId,
+          seatIds,
+          expiresAt: expiresAt.toISOString(),
+        });
+      } catch (err: any) {
+        this.logger.warn(`RabbitMQ direct publish failed for booking ${booking.id}. Outbox poller will dispatch: ${err?.message}`);
+      }
 
       // Broadcast live seat lock state to attendees viewing this event
       if (this.seatingGateway) {
@@ -235,25 +244,20 @@ export class BookingService {
         dto.paymentMethod === 'STRIPE_CARD' || dto.paymentMethod === 'card';
 
       if (!isCardPayment) {
-        // Verify buyer has sufficient wallet balance
-        const buyer = await tx.user.findUnique({
-          where: { id: booking.userId },
-        });
-        if (!buyer) {
-          throw new NotFoundException('Buyer account not found.');
-        }
         const totalNum = booking.totalAmount.toNumber();
-        if (buyer.balance < totalNum) {
-          throw new BadRequestException(
-            `Insufficient wallet balance. Required: $${totalNum.toFixed(2)}, Available: $${buyer.balance.toFixed(2)}`,
-          );
+        const [buyer] = await tx.$queryRaw<Array<{ id: string; balance: number }>>`
+          SELECT id, balance FROM "User" WHERE id = ${booking.userId}::uuid FOR UPDATE
+        `;
+
+        if (!buyer || buyer.balance < totalNum) {
+          throw new BadRequestException('Số dư ví không đủ để thanh toán');
         }
 
         // Atomically deduct wallet balance
         await tx.user.update({
           where: { id: booking.userId },
           data: {
-            balance: { decrement: booking.totalAmount.toNumber() },
+            balance: { decrement: totalNum },
           },
         });
       }
@@ -482,18 +486,13 @@ export class BookingService {
           dto.paymentMethod === 'STRIPE_CARD' || dto.paymentMethod === 'card';
 
         if (!isCardPayment) {
-          // Verify buyer has sufficient wallet balance
-          const buyer = await tx.user.findUnique({
-            where: { id: userId },
-          });
-          if (!buyer) {
-            throw new NotFoundException('Buyer account not found.');
-          }
           const totalNum = totalAmount.toNumber();
-          if (buyer.balance < totalNum) {
-            throw new BadRequestException(
-              `Insufficient wallet balance. Required: $${totalNum.toFixed(2)}, Available: $${buyer.balance.toFixed(2)}`,
-            );
+          const [buyer] = await tx.$queryRaw<Array<{ id: string; balance: number }>>`
+            SELECT id, balance FROM "User" WHERE id = ${userId}::uuid FOR UPDATE
+          `;
+
+          if (!buyer || buyer.balance < totalNum) {
+            throw new BadRequestException('Số dư ví không đủ để thanh toán');
           }
 
           // Atomically deduct wallet balance
@@ -530,8 +529,12 @@ export class BookingService {
           },
         });
 
-        await tx.seat.updateMany({
-          where: { id: { in: validSeatIds } },
+        const updated = await tx.seat.updateMany({
+          where: {
+            id: { in: validSeatIds },
+            eventId: eventId,
+            status: SeatStatus.AVAILABLE,
+          },
           data: {
             status: SeatStatus.BOOKED,
             lockedUntil: null,
@@ -539,6 +542,10 @@ export class BookingService {
             version: { increment: 1 },
           },
         });
+
+        if (updated.count !== validSeatIds.length) {
+          throw new ConflictException('Một hoặc nhiều ghế đã bị thay đổi trạng thái hoặc không còn khả dụng');
+        }
 
         // Record outbox event for the confirmed transaction
         await tx.outboxEvent.create({

@@ -37,6 +37,7 @@ enum OutboxStatus {
   PENDING
   PROCESSING
   PUBLISHED
+  COMPLETED
   FAILED
 }
 
